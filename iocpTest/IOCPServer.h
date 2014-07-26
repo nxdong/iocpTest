@@ -92,6 +92,36 @@ class CMainFrame;
 
 class CIOCPServer{
 public:
+	//in this part declare the variables used in server
+	NOTIFYPROC				m_pNotifyProc;				//user NotifyProc pointer
+	CMainFrame*				m_pFrame;					//Frame pointer
+	static CRITICAL_SECTION	m_cs;						//critical section   
+	SOCKET					m_socListen;                //listen socket
+	WSAEVENT				m_hEvent;					//event for accept message
+	HANDLE					m_hKillEvent;				//event
+	HANDLE					m_hThread;					//handle for listen thread
+	HANDLE					m_hCompletionPort;          //handle for completionPort
+	bool					m_bTimeToKill;				//bool type for close server
+	bool					m_bDisconnectAll;			//boll,if disconnect all client
+	bool					m_bInit;					//if the server was initialized
+	ContextList				m_listContexts;				//list store client info
+	ContextList				m_listFreePool;				//client which not use 
+	BYTE					m_bPacketFlag[5];			//byte array store flag princ
+	LONG					m_nKeepLiveTime;            //heart break time
+	LONG					m_nCurrentThreads;			//number of current threads 
+	LONG					m_nBusyThreads;				//number of busy threads
+	UINT					m_nSendKbps;				// send speed
+	UINT					m_nRecvKbps;				// recv speed
+	UINT					m_nMaxConnections;			// max connections
+public:
 	CIOCPServer();
 	virtual ~CIOCPServer();
+	bool IsRunning();									//if the server is running
+	void Shutdown();									//used in close server 
+	bool Initialize(NOTIFYPROC pNotifyProc, CMainFrame* pFrame,
+					int nMaxConnections, int nPort);    //init the server
+	static unsigned __stdcall ListenThreadProc(LPVOID lpVoid);
+	static unsigned __stdcall ThreadPoolFunc(LPVOID WorkContext);
+	bool InitializeIOCP(void);                          //initialize iocp
+
 };
