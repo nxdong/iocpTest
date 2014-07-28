@@ -11,9 +11,12 @@
 *********************************************************************/
 #pragma once
 #include "stdafx.h"
+#include <MSTcpIP.h>
 #include <WinSock2.h>
 #pragma comment(lib,"ws2_32.lib")
 #include "Buffer.h"
+
+#include "zlib.h"
 
 // This define used by users. used in notifyProc.
 #define	NC_CLIENT_CONNECT		0x0001
@@ -85,6 +88,7 @@ struct ClientContext
 	LONG				m_nMsgOut;	
 	BOOL				m_bIsMainSocket; // 是不是主socket
 };
+#include "iocpMapper.h"
 // typedef for iocp server class
 typedef void (CALLBACK* NOTIFYPROC)(LPVOID, ClientContext*, UINT nCode);
 typedef CList<ClientContext*, ClientContext* > ContextList;
@@ -110,18 +114,43 @@ public:
 	LONG					m_nKeepLiveTime;            //heart break time
 	LONG					m_nCurrentThreads;			//number of current threads 
 	LONG					m_nBusyThreads;				//number of busy threads
-	UINT					m_nSendKbps;				// send speed
-	UINT					m_nRecvKbps;				// recv speed
-	UINT					m_nMaxConnections;			// max connections
+	LONG					m_nThreadPoolMin;			//max thread number
+	LONG					m_nThreadPoolMax;			//min thread number
+	LONG					m_nWorkerCnt;				//current worker thread
+	UINT					m_nSendKbps;				//send speed
+	UINT					m_nRecvKbps;				//recv speed
+	UINT					m_nMaxConnections;			//max connections
 public:
 	CIOCPServer();
 	virtual ~CIOCPServer();
 	bool IsRunning();									//if the server is running
 	void Shutdown();									//used in close server 
+	void Stop();
 	bool Initialize(NOTIFYPROC pNotifyProc, CMainFrame* pFrame,
 					int nMaxConnections, int nPort);    //init the server
 	static unsigned __stdcall ListenThreadProc(LPVOID lpVoid);
 	static unsigned __stdcall ThreadPoolFunc(LPVOID WorkContext);
 	bool InitializeIOCP(void);                          //initialize iocp
+	void OnAccept();
+	ClientContext*  AllocateContext();
+	bool AssociateSocketWithCompletionPort(SOCKET device, HANDLE hCompletionPort, DWORD dwCompletionKey);
+	void PostRecv(ClientContext* pContext);
+	void RemoveStaleClient(ClientContext* pContext, BOOL bGraceful);
+	
+	void Send(ClientContext* pContext, LPBYTE lpData, UINT nSize);
+	void CloseCompletionPort();
+	void MoveToFreePool(ClientContext *pContext);
+	void ResetConnection(ClientContext* pContext);
+	void DisconnectAll();
 
+	bool OnClientInitializing	(ClientContext* pContext, DWORD dwSize = 0);
+	bool OnClientReading		(ClientContext* pContext, DWORD dwSize = 0);
+	bool OnClientWriting		(ClientContext* pContext, DWORD dwSize = 0);
+	BEGIN_IO_MSG_MAP()
+		IO_MESSAGE_HANDLER(IORead, OnClientReading)
+		IO_MESSAGE_HANDLER(IOWrite, OnClientWriting)
+		IO_MESSAGE_HANDLER(IOInitialize, OnClientInitializing)
+	END_IO_MSG_MAP()
 };
+
+
