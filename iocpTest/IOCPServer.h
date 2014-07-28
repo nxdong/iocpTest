@@ -94,11 +94,13 @@ typedef void (CALLBACK* NOTIFYPROC)(LPVOID, ClientContext*, UINT nCode);
 typedef CList<ClientContext*, ClientContext* > ContextList;
 class CMainFrame;
 
+class CiocpTestDlg;
 class CIOCPServer{
 public:
 	//in this part declare the variables used in server
 	NOTIFYPROC				m_pNotifyProc;				//user NotifyProc pointer
-	CMainFrame*				m_pFrame;					//Frame pointer
+	CiocpTestDlg*           m_pFrame;
+	//CMainFrame*				m_pFrame;					//Frame pointer
 	static CRITICAL_SECTION	m_cs;						//critical section   
 	SOCKET					m_socListen;                //listen socket
 	WSAEVENT				m_hEvent;					//event for accept message
@@ -126,7 +128,7 @@ public:
 	bool IsRunning();									//if the server is running
 	void Shutdown();									//used in close server 
 	void Stop();
-	bool Initialize(NOTIFYPROC pNotifyProc, CMainFrame* pFrame,
+	bool Initialize(NOTIFYPROC pNotifyProc, /*CMainFrame* pFrame*/CiocpTestDlg* pFrame,
 					int nMaxConnections, int nPort);    //init the server
 	static unsigned __stdcall ListenThreadProc(LPVOID lpVoid);
 	static unsigned __stdcall ThreadPoolFunc(LPVOID WorkContext);

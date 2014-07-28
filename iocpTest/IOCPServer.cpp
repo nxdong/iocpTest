@@ -70,7 +70,7 @@ CIOCPServer::~CIOCPServer()
 // Parameter: int nMaxConnections
 // Parameter: int nPort
 //************************************
-bool CIOCPServer::Initialize(NOTIFYPROC pNotifyProc, CMainFrame* pFrame, int nMaxConnections, int nPort)
+bool CIOCPServer::Initialize(NOTIFYPROC pNotifyProc,/* CMainFrame*/CiocpTestDlg* pFrame, int nMaxConnections, int nPort)
 {
 	m_pNotifyProc		= pNotifyProc;
 	m_pFrame			= pFrame;
